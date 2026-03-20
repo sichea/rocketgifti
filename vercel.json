@@ -1,7 +1,7 @@
 {
   "builds": [
     {
-      "src": "api/**/*.py",
+      "src": "api/webhook.py",
       "use": "@vercel/python"
     },
     {
@@ -9,14 +9,10 @@
       "use": "@vercel/next"
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
+      "source": "/api/(.*)",
+      "destination": "/api/webhook.py"
     }
   ]
 }
