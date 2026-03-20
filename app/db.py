@@ -247,3 +247,63 @@ def update_winner_send_result(order_id: str, winner_telegram_id: int, **fields):
     if not supabase: return
     # fields: send_status, tr_id, response_code, response_message, coupon_pin, coupon_img_url, order_no
     supabase.table("order_winners").update(fields).eq("order_id", order_id).eq("winner_telegram_id", winner_telegram_id).execute()
+
+
+# ------------------------------------------------------------------
+# Phase 3: Events (B2B Agency)
+# ------------------------------------------------------------------
+
+def create_event(event_id: str, admin_id: int, title: str, goods_code: str, winner_count: int, draw_type: str = "RANDOM"):
+    if not supabase: return
+    supabase.table("events").insert({
+        "event_id": event_id,
+        "admin_id": admin_id,
+        "title": title,
+        "goods_code": goods_code,
+        "winner_count": winner_count,
+        "draw_type": draw_type,
+        "status": "OPEN"
+    }).execute()
+
+def get_event(event_id: str):
+    if not supabase: return None
+    resp = supabase.table("events").select("*").eq("event_id", event_id).execute()
+    return resp.data[0] if resp.data else None
+
+def set_event_status(event_id: str, status: str):
+    if not supabase: return
+    supabase.table("events").update({"status": status}).eq("event_id", event_id).execute()
+
+def list_open_events():
+    if not supabase: return []
+    resp = supabase.table("events").select("*").eq("status", "OPEN").execute()
+    return resp.data
+
+def join_event(event_id: str, telegram_id: int, username: str, quiz_answer: Optional[str] = None):
+    """참여자는 1회만 참여 가능 (UNIQUE 제약조건)"""
+    if not supabase: return "NO_DB"
+    try:
+        supabase.table("event_participants").insert({
+            "event_id": event_id,
+            "telegram_id": telegram_id,
+            "username": username,
+            "quiz_answer": quiz_answer
+        }).execute()
+        return "SUCCESS"
+    except Exception as e:
+        if "duplicate key" in str(e).lower() or "unique" in str(e).lower() or getattr(e, "code", "") == "23505":
+            return "ALREADY_JOINED"
+        print("join_event error:", e)
+        return "ERROR"
+
+def get_event_participants(event_id: str):
+    if not supabase: return []
+    resp = supabase.table("event_participants").select("*").eq("event_id", event_id).order("joined_at", desc=False).execute()
+    return resp.data
+
+def update_participant_send_result(event_id: str, telegram_id: int, **fields):
+    """
+    fields: is_winner, send_status, tr_id, coupon_pin, coupon_img_url
+    """
+    if not supabase: return
+    supabase.table("event_participants").update(fields).eq("event_id", event_id).eq("telegram_id", telegram_id).execute()

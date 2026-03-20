@@ -883,6 +883,12 @@ def get_app():
     app.add_handler(CommandHandler("sync", cmd_sync))
     app.add_handler(CommandHandler("balance", cmd_balance))
 
+    # Phase 3 Event Handlers
+    from app.event_manager import cmd_create_event, cmd_draw_event, CB_JOIN_EVENT, on_join_event
+    app.add_handler(CommandHandler("event", cmd_create_event))
+    app.add_handler(CommandHandler("draw", cmd_draw_event))
+    app.add_handler(CallbackQueryHandler(on_join_event, pattern=f"^{CB_JOIN_EVENT}:"))
+
     app.add_handler(CallbackQueryHandler(on_menu, pattern=f"^{CB_MENU}:"))
     app.add_handler(CallbackQueryHandler(on_catalog, pattern=f"^{CB_CATALOG}:"))
     app.add_handler(CallbackQueryHandler(on_qty, pattern=f"^{CB_QTY}:"))
