@@ -1,0 +1,68 @@
+import { createStitches } from '@stitches/react';
+
+export const { styled, css, globalCss, keyframes, getCssText, theme, createTheme, config } = createStitches({
+  theme: {
+    colors: {
+      black: '#0A0A0A',
+      white: '#FAFAFA',
+      gray100: '#F3F4F6',
+      gray200: '#E5E7EB',
+      gray800: '#1F2937',
+      primary: '#3B82F6',
+      primaryHover: '#2563EB',
+      success: '#10B981',
+      warning: '#F59E0B',
+      danger: '#EF4444',
+      bgBase: '#ffffff',
+      bgSurface: '#F9FAFB',
+      textBase: '#111827',
+      textMuted: '#6B7280',
+    },
+    fonts: {
+      sans: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    },
+    space: {
+      1: '4px',
+      2: '8px',
+      3: '16px',
+      4: '24px',
+      5: '32px',
+      6: '48px',
+    },
+    sizes: {
+      1: '4px',
+      2: '8px',
+      3: '16px',
+      4: '24px',
+      5: '32px',
+      6: '48px',
+    },
+    radii: {
+      sm: '4px',
+      md: '8px',
+      lg: '12px',
+      full: '9999px',
+    },
+    shadows: {
+      sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+      md: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+      lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+    },
+  },
+  utils: {
+    p: (value: any) => ({ padding: value }),
+    pt: (value: any) => ({ paddingTop: value }),
+    pr: (value: any) => ({ paddingRight: value }),
+    pb: (value: any) => ({ paddingBottom: value }),
+    pl: (value: any) => ({ paddingLeft: value }),
+    px: (value: any) => ({ paddingLeft: value, paddingRight: value }),
+    py: (value: any) => ({ paddingTop: value, paddingBottom: value }),
+    m: (value: any) => ({ margin: value }),
+    mt: (value: any) => ({ marginTop: value }),
+    mr: (value: any) => ({ marginRight: value }),
+    mb: (value: any) => ({ marginBottom: value }),
+    ml: (value: any) => ({ marginLeft: value }),
+    mx: (value: any) => ({ marginLeft: value, marginRight: value }),
+    my: (value: any) => ({ marginTop: value, marginBottom: value }),
+  },
+});

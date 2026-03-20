@@ -1,0 +1,14 @@
+[
+  {
+    "goods_code": "G0001",
+    "name": "스타벅스 아메리카노 Tall",
+    "price": 9400,
+    "image_url": "https://example.com/americano.jpg"
+  },
+  {
+    "goods_code": "G0002",
+    "name": "BBQ 황금올리브(반마리)",
+    "price": 19000,
+    "image_url": "https://example.com/bbq.jpg"
+  }
+]
