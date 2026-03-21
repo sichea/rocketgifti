@@ -29,6 +29,23 @@ async def telegram_webhook(request: Request):
     await telegram_app.process_update(update)
     return {"ok": True, "message": "Update processed"}
 
+@app.post("/api/internal/draw")
+async def internal_draw(event_id: str):
+    """
+    웹 어드민에서 호출하는 실시간 추첨 실행 API.
+    """
+    from app.draw_service import perform_draw_and_send
+    
+    # 텔레그램 봇 객체 가져오기 (DM 발송용)
+    bot = telegram_app.bot
+    
+    result = await perform_draw_and_send(event_id, bot=bot)
+    
+    if result["success"]:
+        return {"ok": True, "successCount": result["successCount"], "totalWinners": result["totalWinners"]}
+    else:
+        return {"ok": False, "message": result["message"]}
+
 @app.get("/api/ping")
 async def ping():
     """상태 체크용 (Health Check)"""

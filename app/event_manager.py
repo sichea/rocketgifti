@@ -11,6 +11,7 @@ from app.config import (
     GIFTISHOW_CALLBACK_NO
 )
 from app.giftishow import GiftishowClient
+from app.draw_service import perform_draw_and_send
 
 CB_JOIN_EVENT = "ev_join"
 
@@ -173,71 +174,13 @@ async def cmd_draw_event(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     winner_names = [f"@{w.get('username', 'Unknown')}" for w in winners]
     
-    msg = f"🎉 <b>[{event['title']}] 추첨 완료!</b>\n\n당첨자 {len(winners)}명:\n"
-    msg += "\n".join(winner_names)
-    msg += "\n\n⚠️ 당첨자에게 기프티콘을 곧바로 다이렉트(DM) 발송합니다!"
-    
+    msg = f"🎉 <b>[{event['title']}] 추첨 완료!</b>\n\n⚠️ 당첨자들에게 기프티콘을 곧바로 다이렉트(DM) 발송합니다!"
     status_msg = await update.message.reply_text(msg, parse_mode="HTML")
     
-    # 기프티쇼 API 연동 발송 로직
-    client = GiftishowClient(
-        base_url=GIFTISHOW_API_BASE,
-        custom_auth_code=GIFTISHOW_CUSTOM_AUTH_CODE,
-        custom_auth_token=GIFTISHOW_CUSTOM_AUTH_TOKEN,
-        user_id=GIFTISHOW_USER_ID,
-        dev_yn=GIFTISHOW_DEV_YN
-    )
+    # 코어 추첨 서비스 호출
+    result = await perform_draw_and_send(event_id, bot=context.bot)
     
-    success_count = 0
-    for w in winners:
-        winner_tid = w["telegram_id"]
-        # 당첨자 플래그 업데이트
-        db.update_participant_send_result(event_id, winner_tid, is_winner=True)
-        
-        date_part = datetime.now().strftime("%Y%m%d")
-        seq = str(random.randint(100, 999))
-        tr_id = f"ev_{date_part}_{event_id[:4]}_{seq}"[:25]
-        
-        try:
-            resp = client.send_coupon(
-                tr_id=tr_id,
-                phone_no="01000000000",
-                goods_code=event["goods_code"],
-                gubun="I",
-                callback_no=GIFTISHOW_CALLBACK_NO,
-                mms_title="이벤트 당첨",
-                mms_msg="축하합니다! 이벤트에 당첨되었습니다."
-            )
-            inner = resp.get("result", {})
-            result = inner.get("result", {})
-            pin = result.get("pinNo")
-            img = result.get("couponImgUrl")
-            
-            if pin or img:
-                db.update_participant_send_result(
-                    event_id, winner_tid,
-                    send_status="SUCCESS", tr_id=tr_id, 
-                    coupon_pin=pin, coupon_img_url=img
-                )
-                success_count += 1
-                
-                # 당첨자에게 DM 쏘기
-                dm_lines = [f"🎉 <b>[{event['title']}] 당첨을 축하합니다!</b>\n"]
-                if img:
-                    try:
-                        await context.bot.send_photo(chat_id=winner_tid, photo=img, caption="교환 바코드")
-                    except Exception: pass
-                if pin:
-                    dm_lines.append(f"PIN: <code>{pin}</code>")
-                dm_lines.append("\n⚠️ 유효기간 30일 / 기간연장·환불 불가")
-                
-                try:
-                    await context.bot.send_message(chat_id=winner_tid, text="\n".join(dm_lines), parse_mode="HTML")
-                except Exception: pass
-            else:
-                db.update_participant_send_result(event_id, winner_tid, send_status="FAILED", tr_id=tr_id)
-        except Exception as e:
-            print("Event bulk send error:", e)
-            db.update_participant_send_result(event_id, winner_tid, send_status="FAILED_EXP")
-            
-    await status_msg.reply_text(f"✅ 총 {success_count}/{len(winners)} 명에게 발송 되었습니다.")
+    if result["success"]:
+        await status_msg.reply_text(f"✅ 총 {result['successCount']}/{result['totalWinners']} 명에게 발송 되었습니다.")
+    else:
+        await status_msg.reply_text(f"❌ 실패: {result['message']}")
